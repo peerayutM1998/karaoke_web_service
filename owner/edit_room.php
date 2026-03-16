@@ -7,29 +7,30 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
     exit();
 }
 
-// ระบบลบข้อมูลลูกค้า
-if (isset($_GET['delete_id'])) {
-    $del_id = $_GET['delete_id'];
-    mysqli_query($conn, "DELETE FROM users WHERE user_id = $del_id AND role = 'customer'");
-    $_SESSION['success'] = "ลบข้อมูลลูกค้าเรียบร้อยแล้ว";
-    header("location: manage_users.php");
+$room_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$result = mysqli_query($conn, "SELECT * FROM rooms WHERE room_id = $room_id");
+$row = mysqli_fetch_assoc($result);
+
+if (isset($_POST['update_room'])) {
+    $room_name = mysqli_real_escape_string($conn, $_POST['room_name']);
+    $capacity = $_POST['capacity'];
+    $price = $_POST['price_per_hour'];
+    $status = $_POST['status'];
+
+    $sql = "UPDATE rooms SET room_name='$room_name', capacity='$capacity', price_per_hour='$price', status='$status' WHERE room_id=$room_id";
+    if(mysqli_query($conn, $sql)) $_SESSION['success'] = "แก้ไขข้อมูลห้องสำเร็จ";
+    header("location: manage_rooms.php");
     exit();
 }
-
-$query = "SELECT * FROM users WHERE role = 'customer' ORDER BY created_at DESC";
-$result = mysqli_query($conn, $query);
 ?>
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>จัดการลูกค้า | เจ้าของร้าน</title>
+    <title>แก้ไขห้อง | เจ้าของร้าน</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } </style>
 </head>
-<body>
+<body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
@@ -78,46 +79,24 @@ $result = mysqli_query($conn, $query);
         </div>
     </div>
 </nav>
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="mb-0">👥 จัดการข้อมูลลูกค้า</h3>
-            </div>
-
-        <?php if(isset($_SESSION['success'])): ?>
-            <div class="alert alert-success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></div>
-        <?php endif; ?>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th class="p-3">ID</th>
-                            <th>Username</th>
-                            <th>ชื่อ-นามสกุล</th>
-                            <th>อีเมล</th>
-                            <th>เบอร์โทรศัพท์</th>
-                            <th>วันที่สมัคร</th>
-                            <th class="text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td class="p-3"><?php echo $row['user_id']; ?></td>
-                            <td><?php echo $row['username']; ?></td>
-                            <td><?php echo $row['first_name'] . " " . $row['last_name']; ?></td>
-                            <td><?php echo $row['email']; ?></td>
-                            <td><?php echo $row['phone']; ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($row['created_at'])); ?></td>
-                            <td class="text-center">
-                                <a href="edit_user.php?id=<?php echo $row['user_id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-                                <a href="manage_users.php?delete_id=<?php echo $row['user_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('ยืนยันการลบลูกค้าคนนี้? (การจองที่ผูกไว้จะหายไปด้วย)');">ลบ</a>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
+    <div class="container mt-5" style="max-width: 500px;">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white fw-bold">แก้ไขข้อมูลห้อง: <?php echo $row['room_name']; ?></div>
+            <div class="card-body">
+                <form action="edit_room.php?id=<?php echo $room_id; ?>" method="POST">
+                    <div class="mb-3"><label>ชื่อห้อง</label><input type="text" name="room_name" class="form-control" value="<?php echo $row['room_name']; ?>" required></div>
+                    <div class="mb-3"><label>ความจุ (ท่าน)</label><input type="number" name="capacity" class="form-control" value="<?php echo $row['capacity']; ?>" required></div>
+                    <div class="mb-3"><label>ราคา/ชม.</label><input type="number" name="price_per_hour" class="form-control" value="<?php echo $row['price_per_hour']; ?>" required></div>
+                    <div class="mb-4">
+                        <label>สถานะ</label>
+                        <select name="status" class="form-select">
+                            <option value="available" <?php echo ($row['status']=='available')?'selected':''; ?>>ว่าง/พร้อมใช้</option>
+                            <option value="maintenance" <?php echo ($row['status']=='maintenance')?'selected':''; ?>>ซ่อมบำรุง</option>
+                        </select>
+                    </div>
+                    <button type="submit" name="update_room" class="btn btn-primary w-100">บันทึกการแก้ไข</button>
+                    <a href="manage_rooms.php" class="btn btn-secondary w-100 mt-2">ยกเลิก</a>
+                </form>
             </div>
         </div>
     </div>

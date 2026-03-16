@@ -57,6 +57,10 @@ $result = mysqli_query($conn, $query);
                     <li class="nav-item"><a class="nav-link" href="booking.php">จองห้องพัก</a></li>
                     <li class="nav-item"><a class="nav-link active" href="my_bookings.php">ประวัติการจอง</a></li>
                 </ul>
+                                <div class="d-flex text-white align-items-center">
+                    <span class="me-3">👤 สวัสดี, คุณ <?php echo $_SESSION['first_name']; ?></span>
+                    <a href="../logout.php" class="btn btn-danger btn-sm">ออกจากระบบ</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -108,7 +112,21 @@ $result = mysqli_query($conn, $query);
                                     </td>
                                     <td class="text-center p-3">
                                         <?php if($row['booking_status'] == 'pending'): ?>
-                                            <a href="my_bookings.php?cancel_id=<?php echo $row['booking_id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้?');">ยกเลิก</a>
+                                            <div class="btn-group shadow-sm" role="group">
+            
+            <a href="payment.php?booking_id=<?php echo $row['booking_id']; ?>" class="btn btn-sm btn-success fw-bold">
+                💰 ชำระเงิน
+            </a>
+            
+            <a href="edit_booking.php?id=<?php echo $row['booking_id']; ?>" class="btn btn-sm btn-warning">
+                ✏️ แก้ไข
+            </a>
+            
+            <a href="my_bookings.php?cancel_id=<?php echo $row['booking_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้?');">
+                ❌ ยกเลิก
+            </a>
+            
+        </div>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>

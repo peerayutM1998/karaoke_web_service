@@ -84,6 +84,10 @@ if(isset($_POST['submit_booking'])) {
                     <li class="nav-item"><a class="nav-link active" href="booking.php">จองห้องพัก</a></li>
                     <li class="nav-item"><a class="nav-link" href="my_bookings.php">ประวัติการจอง</a></li>
                 </ul>
+                                <div class="d-flex text-white align-items-center">
+                    <span class="me-3">👤 สวัสดี, คุณ <?php echo $_SESSION['first_name']; ?></span>
+                    <a href="../logout.php" class="btn btn-danger btn-sm">ออกจากระบบ</a>
+                </div>
             </div>
         </div>
     </nav>

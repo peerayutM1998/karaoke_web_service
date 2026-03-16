@@ -46,7 +46,29 @@ $result = mysqli_query($conn, $query);
     <style> body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } </style>
 </head>
 <body>
-    
+        <nav class="navbar navbar-expand-lg navbar-dark bg-info shadow-sm mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-dark" href="index.php">👨‍💼 Employee Desk</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active text-dark" href="index.php">สถานะห้อง (Dashboard)</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="view_bookings.php">คิวจองวันนี้</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="room_status.php">เช็คอิน/เช็คเอาท์</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="manage_orders.php">ออเดอร์อาหาร</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="check_payments.php">เช็คบิล</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="manage_customers.php">ลูกค้า Walk-in</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="verify_payments.php">ตรวจสลิปโอนเงิน</a></li>
+                </ul>
+                <div class="d-flex text-dark align-items-center fw-bold">
+                    <span class="me-3">พนักงาน: <?php echo $_SESSION['first_name']; ?></span>
+                    <a href="../logout.php" class="btn btn-dark btn-sm">ออกจากระบบ</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="container mt-4">
         <h3 class="mb-4">👥 สมัครสมาชิกให้ลูกค้าหน้าร้าน (Walk-in)</h3>
 
@@ -92,6 +114,7 @@ $result = mysqli_query($conn, $query);
                                     <th>Username (เข้าสู่ระบบ)</th>
                                     <th>เบอร์โทรศัพท์</th>
                                     <th>วันที่สมัคร</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -101,6 +124,7 @@ $result = mysqli_query($conn, $query);
                                     <td class="text-primary"><?php echo $row['username']; ?></td>
                                     <td><?php echo $row['phone']; ?></td>
                                     <td class="text-muted small"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
+                                   <td><a href="edit_customer.php?id=<?php echo $row['user_id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a></td> 
                                 </tr>
                                 <?php endwhile; ?>
                             </tbody>

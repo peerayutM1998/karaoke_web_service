@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
-// นับจำนวนครั้งที่จอง และรวมชั่วโมงการใช้งาน โดยจัดกลุ่มตามห้อง (นับเฉพาะบิลที่จ่ายเงิน/ใช้บริการจริง)
 $query = "SELECT r.room_name, r.capacity, COUNT(b.booking_id) as total_bookings, SUM(b.total_hours) as total_hours_used 
           FROM rooms r
           LEFT JOIN bookings b ON r.room_id = b.room_id AND b.booking_status IN ('confirmed', 'completed') AND b.booking_date BETWEEN '$start_date' AND '$end_date'
@@ -32,12 +31,59 @@ $result = mysqli_query($conn, $query);
     </style>
 </head>
 <body>
-    
-    <div class="no-print">
-        </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ownerNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="ownerNavbar">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.php">🏠 แดชบอร์ด</a>
+                </li>
 
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">⚙️ จัดการระบบ</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="manage_rooms.php">จัดการห้องคาราโอเกะ</a></li>
+                        <li><a class="dropdown-item" href="manage_promotions.php">จัดการโปรโมชั่น</a></li>
+    <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="manage_users.php">จัดการลูกค้า</a></li>
+                        <li><a class="dropdown-item" href="manage_employees.php">จัดการพนักงาน</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">🛎️ ตรวจสอบบริการ</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="manage_bookings.php">📅 คิวการจองทั้งหมด</a></li>
+                        <li><a class="dropdown-item" href="verify_payments.php">💳 ตรวจสลิปโอนเงิน</a></li>
+                        <li><a class="dropdown-item" href="view_orders.php">🍔 รายการสั่งอาหาร</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📊 รายงาน</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="report_income.php">💰 สรุปรายได้</a></li>
+                        <li><a class="dropdown-item" href="report_usage.php">📈 สรุปการใช้บริการ</a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="d-flex text-white align-items-center">
+                <a href="../logout.php" class="btn btn-outline-light btn-sm fw-bold">🚪 ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+</nav>
     <div class="container mt-4">
-        <h3 class="mb-4">📊 รายงานสรุปความนิยมของห้อง (การใช้บริการ)</h3>
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h3 class="mb-0">📊 รายงานสรุปความนิยมของห้อง</h3>
+            <a href="index.php" class="btn btn-secondary">กลับหน้าหลัก</a>
+        </div>
 
         <div class="card shadow-sm border-0 mb-4 no-print">
             <div class="card-body">

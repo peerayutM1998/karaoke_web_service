@@ -37,6 +37,7 @@ $result_rooms = mysqli_query($conn, $query_rooms);
                     <li class="nav-item"><a class="nav-link text-dark" href="manage_orders.php">ออเดอร์อาหาร</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="check_payments.php">เช็คบิล</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="manage_customers.php">ลูกค้า Walk-in</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="verify_payments.php">ตรวจสลิปโอนเงิน</a></li>
                 </ul>
                 <div class="d-flex text-dark align-items-center fw-bold">
                     <span class="me-3">พนักงาน: <?php echo $_SESSION['first_name']; ?></span>

@@ -7,29 +7,32 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
     exit();
 }
 
-// ระบบลบข้อมูลลูกค้า
-if (isset($_GET['delete_id'])) {
-    $del_id = $_GET['delete_id'];
-    mysqli_query($conn, "DELETE FROM users WHERE user_id = $del_id AND role = 'customer'");
-    $_SESSION['success'] = "ลบข้อมูลลูกค้าเรียบร้อยแล้ว";
-    header("location: manage_users.php");
+$promo_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$result = mysqli_query($conn, "SELECT * FROM promotions WHERE promo_id = $promo_id");
+$row = mysqli_fetch_assoc($result);
+
+if (isset($_POST['update_promo'])) {
+    $promo_name = mysqli_real_escape_string($conn, $_POST['promo_name']);
+    $discount_percent = !empty($_POST['discount_percent']) ? $_POST['discount_percent'] : 0;
+    $discount_amount = !empty($_POST['discount_amount']) ? $_POST['discount_amount'] : 0;
+    $start_date = $_POST['start_date'];
+    $end_date = $_POST['end_date'];
+    $status = $_POST['status'];
+
+    $sql = "UPDATE promotions SET promo_name='$promo_name', discount_percent='$discount_percent', discount_amount='$discount_amount', start_date='$start_date', end_date='$end_date', status='$status' WHERE promo_id=$promo_id";
+    if(mysqli_query($conn, $sql)) $_SESSION['success'] = "แก้ไขโปรโมชั่นสำเร็จ";
+    header("location: manage_promotions.php");
     exit();
 }
-
-$query = "SELECT * FROM users WHERE role = 'customer' ORDER BY created_at DESC";
-$result = mysqli_query($conn, $query);
 ?>
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>จัดการลูกค้า | เจ้าของร้าน</title>
+    <title>แก้ไขโปรโมชั่น | เจ้าของร้าน</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } </style>
 </head>
-<body>
+<body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
@@ -78,46 +81,30 @@ $result = mysqli_query($conn, $query);
         </div>
     </div>
 </nav>
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="mb-0">👥 จัดการข้อมูลลูกค้า</h3>
-            </div>
-
-        <?php if(isset($_SESSION['success'])): ?>
-            <div class="alert alert-success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></div>
-        <?php endif; ?>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th class="p-3">ID</th>
-                            <th>Username</th>
-                            <th>ชื่อ-นามสกุล</th>
-                            <th>อีเมล</th>
-                            <th>เบอร์โทรศัพท์</th>
-                            <th>วันที่สมัคร</th>
-                            <th class="text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td class="p-3"><?php echo $row['user_id']; ?></td>
-                            <td><?php echo $row['username']; ?></td>
-                            <td><?php echo $row['first_name'] . " " . $row['last_name']; ?></td>
-                            <td><?php echo $row['email']; ?></td>
-                            <td><?php echo $row['phone']; ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($row['created_at'])); ?></td>
-                            <td class="text-center">
-                                <a href="edit_user.php?id=<?php echo $row['user_id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-                                <a href="manage_users.php?delete_id=<?php echo $row['user_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('ยืนยันการลบลูกค้าคนนี้? (การจองที่ผูกไว้จะหายไปด้วย)');">ลบ</a>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
+    <div class="container mt-5" style="max-width: 500px;">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark fw-bold">แก้ไขโปรโมชั่น: <?php echo $row['promo_name']; ?></div>
+            <div class="card-body">
+                <form action="edit_promo.php?id=<?php echo $promo_id; ?>" method="POST">
+                    <div class="mb-3"><label>ชื่อโปรโมชั่น</label><input type="text" name="promo_name" class="form-control" value="<?php echo $row['promo_name']; ?>" required></div>
+                    <div class="row mb-3">
+                        <div class="col"><label>ส่วนลด (%)</label><input type="number" name="discount_percent" class="form-control" value="<?php echo $row['discount_percent']; ?>"></div>
+                        <div class="col"><label>ส่วนลด (บาท)</label><input type="number" name="discount_amount" class="form-control" value="<?php echo $row['discount_amount']; ?>"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col"><label>วันที่เริ่ม</label><input type="date" name="start_date" class="form-control" value="<?php echo $row['start_date']; ?>" required></div>
+                        <div class="col"><label>วันสิ้นสุด</label><input type="date" name="end_date" class="form-control" value="<?php echo $row['end_date']; ?>" required></div>
+                    </div>
+                    <div class="mb-4">
+                        <label>สถานะ</label>
+                        <select name="status" class="form-select">
+                            <option value="active" <?php echo ($row['status']=='active')?'selected':''; ?>>ใช้งานปกติ</option>
+                            <option value="inactive" <?php echo ($row['status']=='inactive')?'selected':''; ?>>ระงับชั่วคราว</option>
+                        </select>
+                    </div>
+                    <button type="submit" name="update_promo" class="btn btn-warning w-100 fw-bold">บันทึกการแก้ไข</button>
+                    <a href="manage_promotions.php" class="btn btn-secondary w-100 mt-2">ยกเลิก</a>
+                </form>
             </div>
         </div>
     </div>

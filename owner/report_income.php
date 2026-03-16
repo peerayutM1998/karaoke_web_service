@@ -7,18 +7,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
     exit();
 }
 
-// กำหนดค่าเริ่มต้นของวันที่ (ตั้งแต่วันแรกของเดือน ถึง วันนี้)
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
-// ดึงข้อมูลรายได้รายวัน จากตาราง payments ที่ผ่านการตรวจสอบแล้ว
 $query = "SELECT DATE(payment_date) as pay_date, COUNT(payment_id) as total_bills, SUM(amount_paid) as daily_income 
           FROM payments 
           WHERE payment_status = 'verified' AND DATE(payment_date) BETWEEN '$start_date' AND '$end_date'
           GROUP BY DATE(payment_date) 
           ORDER BY DATE(payment_date) ASC";
 $result = mysqli_query($conn, $query);
-
 $total_period_income = 0;
 ?>
 
@@ -31,7 +28,6 @@ $total_period_income = 0;
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } 
-        /* ซ่อนปุ่มต่างๆ ตอนกดสั่งพิมพ์ (PDF) */
         @media print {
             .no-print { display: none !important; }
             .card { border: none !important; box-shadow: none !important; }
@@ -40,12 +36,59 @@ $total_period_income = 0;
     </style>
 </head>
 <body>
-    
-    <div class="no-print">
-        </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ownerNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="ownerNavbar">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.php">🏠 แดชบอร์ด</a>
+                </li>
 
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">⚙️ จัดการระบบ</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="manage_rooms.php">จัดการห้องคาราโอเกะ</a></li>
+                        <li><a class="dropdown-item" href="manage_promotions.php">จัดการโปรโมชั่น</a></li>
+    <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="manage_users.php">จัดการลูกค้า</a></li>
+                        <li><a class="dropdown-item" href="manage_employees.php">จัดการพนักงาน</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">🛎️ ตรวจสอบบริการ</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="manage_bookings.php">📅 คิวการจองทั้งหมด</a></li>
+                        <li><a class="dropdown-item" href="verify_payments.php">💳 ตรวจสลิปโอนเงิน</a></li>
+                        <li><a class="dropdown-item" href="view_orders.php">🍔 รายการสั่งอาหาร</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📊 รายงาน</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="report_income.php">💰 สรุปรายได้</a></li>
+                        <li><a class="dropdown-item" href="report_usage.php">📈 สรุปการใช้บริการ</a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="d-flex text-white align-items-center">
+                <a href="../logout.php" class="btn btn-outline-light btn-sm fw-bold">🚪 ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+</nav>
     <div class="container mt-4">
-        <h3 class="mb-4">📈 รายงานสรุปรายได้</h3>
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h3 class="mb-0">📈 รายงานสรุปรายได้</h3>
+            <a href="index.php" class="btn btn-secondary">กลับหน้าหลัก</a>
+        </div>
 
         <div class="card shadow-sm border-0 mb-4 no-print">
             <div class="card-body">
@@ -113,15 +156,11 @@ $total_period_income = 0;
         function exportTableToCSV(filename) {
             var csv = [];
             var rows = document.querySelectorAll("#reportTable tr");
-            
             for (var i = 0; i < rows.length; i++) {
                 var row = [], cols = rows[i].querySelectorAll("td, th");
-                for (var j = 0; j < cols.length; j++) 
-                    row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                for (var j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
                 csv.push(row.join(","));
             }
-
-            // เพิ่ม BOM ให้ Excel อ่านภาษาไทยได้
             var csvFile = new Blob(["\uFEFF"+csv.join("\n")], {type: "text/csv;charset=utf-8;"});
             var downloadLink = document.createElement("a");
             downloadLink.download = filename;

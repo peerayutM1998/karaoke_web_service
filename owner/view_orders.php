@@ -27,9 +27,59 @@ $result = mysqli_query($conn, $query);
     <style> body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } </style>
 </head>
 <body>
-    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ownerNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="ownerNavbar">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.php">🏠 แดชบอร์ด</a>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">⚙️ จัดการระบบ</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="manage_rooms.php">จัดการห้องคาราโอเกะ</a></li>
+                        <li><a class="dropdown-item" href="manage_promotions.php">จัดการโปรโมชั่น</a></li>
+    <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="manage_users.php">จัดการลูกค้า</a></li>
+                        <li><a class="dropdown-item" href="manage_employees.php">จัดการพนักงาน</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">🛎️ ตรวจสอบบริการ</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="manage_bookings.php">📅 คิวการจองทั้งหมด</a></li>
+                        <li><a class="dropdown-item" href="verify_payments.php">💳 ตรวจสลิปโอนเงิน</a></li>
+                        <li><a class="dropdown-item" href="view_orders.php">🍔 รายการสั่งอาหาร</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📊 รายงาน</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="report_income.php">💰 สรุปรายได้</a></li>
+                        <li><a class="dropdown-item" href="report_usage.php">📈 สรุปการใช้บริการ</a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="d-flex text-white align-items-center">
+                <a href="../logout.php" class="btn btn-outline-light btn-sm fw-bold">🚪 ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+</nav>
     <div class="container mt-4">
-        <h3 class="mb-4">🍔 ภาพรวมการสั่งอาหารและเครื่องดื่ม</h3>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">🍔 ภาพรวมการสั่งอาหารและเครื่องดื่ม</h3>
+            <a href="index.php" class="btn btn-secondary">กลับหน้าหลัก</a>
+        </div>
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-0 table-responsive">
