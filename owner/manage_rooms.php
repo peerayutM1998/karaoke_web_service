@@ -10,9 +10,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
 // ระบบเพิ่มห้อง
 if (isset($_POST['add_room'])) {
     $room_name = mysqli_real_escape_string($conn, $_POST['room_name']);
-    $capacity = $_POST['capacity'];
-    $price = $_POST['price_per_hour'];
-    $status = $_POST['status'];
+    $capacity = mysqli_real_escape_string($conn, $_POST['capacity']);
+    $price = mysqli_real_escape_string($conn, $_POST['price_per_hour']);
+    $status = mysqli_real_escape_string($conn, $_POST['status']);
 
     $sql = "INSERT INTO rooms (room_name, capacity, price_per_hour, status) VALUES ('$room_name', '$capacity', '$price', '$status')";
     if(mysqli_query($conn, $sql)) $_SESSION['success'] = "เพิ่มห้องคาราโอเกะสำเร็จ";
@@ -22,14 +22,19 @@ if (isset($_POST['add_room'])) {
 
 // ระบบลบห้อง
 if (isset($_GET['delete_id'])) {
-    $del_id = $_GET['delete_id'];
+    $del_id = mysqli_real_escape_string($conn, $_GET['delete_id']);
     mysqli_query($conn, "DELETE FROM rooms WHERE room_id = $del_id");
     $_SESSION['success'] = "ลบข้อมูลห้องสำเร็จ";
     header("location: manage_rooms.php");
     exit();
 }
 
-$query = "SELECT * FROM rooms";
+// แก้ไข Query: ตัด b.status ออก เพื่อป้องกัน Error และเช็คจากเวลาแทน
+$query = "SELECT r.*, 
+          (SELECT COUNT(*) FROM bookings b 
+           WHERE b.room_id = r.room_id 
+           AND NOW() BETWEEN b.start_time AND b.end_time) as current_booking_count
+          FROM rooms r";
 $result = mysqli_query($conn, $query);
 ?>
 
@@ -40,7 +45,10 @@ $result = mysqli_query($conn, $query);
     <title>จัดการห้องคาราโอเกะ | เจ้าของร้าน</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } </style>
+    <style> 
+        body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } 
+        .badge { font-size: 0.9em; padding: 0.5em 0.8em; }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
@@ -95,7 +103,10 @@ $result = mysqli_query($conn, $query);
         <h3 class="mb-4">🎤 จัดการข้อมูลห้องคาราโอเกะ</h3>
 
         <?php if(isset($_SESSION['success'])): ?>
-            <div class="alert alert-success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></div>
+            <div class="alert alert-success alert-dismissible fade show">
+                <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php endif; ?>
 
         <div class="row">
@@ -139,7 +150,7 @@ $result = mysqli_query($conn, $query);
                                     <th>ชื่อห้อง</th>
                                     <th>ความจุ</th>
                                     <th>ราคา/ชม.</th>
-                                    <th>สถานะ</th>
+                                    <th>สถานะจริง</th>
                                     <th class="text-center">จัดการ</th>
                                 </tr>
                             </thead>
@@ -151,16 +162,20 @@ $result = mysqli_query($conn, $query);
                                     <td><?php echo $row['capacity']; ?> คน</td>
                                     <td class="text-success fw-bold">฿<?php echo number_format($row['price_per_hour'], 2); ?></td>
                                     <td>
-                                        <?php if($row['status'] == 'available'): ?>
-                                            <span class="badge bg-success">ว่าง/พร้อมใช้</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">ปิดซ่อมบำรุง</span>
-                                        <?php endif; ?>
+                                        <?php 
+                                        if ($row['status'] == 'maintenance') {
+                                            echo '<span class="badge bg-secondary">🛠️ ปิดซ่อมบำรุง</span>';
+                                        } elseif ($row['current_booking_count'] > 0) {
+                                            echo '<span class="badge bg-danger">🔴 ไม่ว่าง (กำลังใช้งาน)</span>';
+                                        } else {
+                                            echo '<span class="badge bg-success">🟢 ว่าง/พร้อมใช้</span>';
+                                        }
+                                        ?>
                                     </td>
                                     <td class="text-center">
-    <a href="edit_room.php?id=<?php echo $row['room_id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-    <a href="manage_rooms.php?delete_id=<?php echo $row['room_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('ยืนยันการลบห้อง?');">ลบ</a>
-</td>
+                                        <a href="edit_room.php?id=<?php echo $row['room_id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
+                                        <a href="manage_rooms.php?delete_id=<?php echo $row['room_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('ยืนยันการลบห้อง?');">ลบ</a>
+                                    </td>
                                 </tr>
                                 <?php endwhile; ?>
                             </tbody>
@@ -170,5 +185,7 @@ $result = mysqli_query($conn, $query);
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
