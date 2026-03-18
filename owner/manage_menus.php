@@ -96,6 +96,7 @@ $result = mysqli_query($conn, $query);
                 </li>
 
                 <li class="nav-item dropdown">
+                    
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📊 รายงาน</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="report_income.php">💰 สรุปรายได้</a></li>

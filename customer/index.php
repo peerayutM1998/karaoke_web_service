@@ -42,6 +42,8 @@ $result_active = mysqli_query($conn, $query_active);
                     <li class="nav-item"><a class="nav-link active" href="index.php">หน้าหลักโปรไฟล์</a></li>
                     <li class="nav-item"><a class="nav-link" href="booking.php">จองห้องพัก</a></li>
                     <li class="nav-item"><a class="nav-link" href="my_bookings.php">ประวัติการจอง</a></li>
+                    <li class="nav-item"><a class="nav-link" href="order_food.php">สั่งอาหาร</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="my_orders.php">ประวัติสั่งอาหาร</a></li>
                 </ul>
                 <div class="d-flex text-white align-items-center">
                     <span class="me-3">👤 สวัสดี, คุณ <?php echo $_SESSION['first_name']; ?></span>

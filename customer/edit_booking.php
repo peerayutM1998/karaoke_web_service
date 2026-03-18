@@ -90,7 +90,27 @@ if(isset($_POST['update_booking'])) {
     <style> body { font-family: 'Prompt', sans-serif; background-color: #f8f9fa; } </style>
 </head>
 <body>
-    
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.php">Karaoke Customer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="index.php">หน้าหลักโปรไฟล์</a></li>
+                    <li class="nav-item"><a class="nav-link" href="booking.php">จองห้องพัก</a></li>
+                    <li class="nav-item"><a class="nav-link" href="my_bookings.php">ประวัติการจอง</a></li>
+                    <li class="nav-item"><a class="nav-link" href="order_food.php">สั่งอาหาร</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="my_orders.php">ประวัติสั่งอาหาร</a></li>
+                </ul>
+                <div class="d-flex text-white align-items-center">
+                    <span class="me-3">👤 สวัสดี, คุณ <?php echo $_SESSION['first_name']; ?></span>
+                    <a href="../logout.php" class="btn btn-danger btn-sm">ออกจากระบบ</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="container mt-5">
         <div class="card shadow-sm border-0 mx-auto" style="max-width: 700px;">
             <div class="card-header bg-warning text-dark">

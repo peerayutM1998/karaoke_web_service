@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Bangkok');
 require_once "../config/db_connect.php";
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'employee') {
@@ -31,21 +32,23 @@ $result_rooms = mysqli_query($conn, $query_rooms);
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link active text-dark" href="index.php">สถานะห้อง (Dashboard)</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="index.php">สถานะห้อง (Dashboard)</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="view_bookings.php">คิวจองวันนี้</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="room_status.php">เช็คอิน/เช็คเอาท์</a></li>
-                    <li class="nav-item"><a class="nav-link text-dark" href="manage_orders.php">ออเดอร์อาหาร</a></li>
+                    <li class="nav-item"><a class="nav-link active text-dark fw-bold" href="manage_orders.php">ออเดอร์อาหาร</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="check_payments.php">เช็คบิล</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="manage_customers.php">ลูกค้า Walk-in</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="verify_payments.php">ตรวจสลิปโอนเงิน</a></li>
                 </ul>
                 <div class="d-flex text-dark align-items-center fw-bold">
+                    <a href="add_order.php" class="btn btn-success btn-sm me-3">➕ พนักงานสั่งอาหาร</a>
                     <span class="me-3">พนักงาน: <?php echo $_SESSION['first_name']; ?></span>
                     <a href="../logout.php" class="btn btn-dark btn-sm">ออกจากระบบ</a>
                 </div>
             </div>
         </div>
     </nav>
+
 
     <div class="container">
         <h3 class="mb-4 fw-bold">📺 สถานะห้องคาราโอเกะ (Live Status)</h3>
