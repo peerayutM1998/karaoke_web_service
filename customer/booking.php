@@ -31,34 +31,60 @@ if(isset($_POST['submit_booking'])) {
 
     if($total_hours <= 0) {
         $_SESSION['error'] = "เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น";
+        header("location: booking.php");
+        exit();
     } else {
-        // ดึงราคาห้อง
-        $room_query = mysqli_query($conn, "SELECT price_per_hour FROM rooms WHERE room_id = $room_id");
-        $room_data = mysqli_fetch_assoc($room_query);
-        $room_price = $room_data['price_per_hour'] * $total_hours;
+        // ==========================================
+        // 🌟 ระบบเช็คการจองซ้ำ (Overlap Check)
+        // ==========================================
+        // ตรวจสอบว่าห้องนี้ ในวันนี้ มีการจองที่เวลายังคงซ้อนทับกันอยู่หรือไม่ 
+        // (ไม่นับบิลที่ถูกยกเลิก 'cancelled' หรือปฏิเสธ 'rejected')
+        $check_sql = "SELECT * FROM bookings 
+                      WHERE room_id = '$room_id' 
+                      AND booking_date = '$booking_date' 
+                      AND booking_status NOT IN ('cancelled', 'rejected') 
+                      AND (start_time < '$end_time' AND end_time > '$start_time')";
         
-        // คำนวณส่วนลดเบื้องต้น
-        $net_price = $room_price;
-        if($promo_id != 'NULL') {
-            $promo_query = mysqli_query($conn, "SELECT discount_percent, discount_amount FROM promotions WHERE promo_id = $promo_id");
-            $promo_data = mysqli_fetch_assoc($promo_query);
-            if($promo_data['discount_percent'] > 0) {
-                $net_price = $room_price - ($room_price * ($promo_data['discount_percent']/100));
-            } else {
-                $net_price = $room_price - $promo_data['discount_amount'];
-            }
-        }
+        $check_query = mysqli_query($conn, $check_sql);
 
-        // บันทึกลงฐานข้อมูล
-        $sql = "INSERT INTO bookings (customer_id, room_id, promo_id, booking_date, start_time, end_time, total_hours, room_price, net_price, booking_status) 
-                VALUES ('$user_id', '$room_id', $promo_id, '$booking_date', '$start_time', '$end_time', '$total_hours', '$room_price', '$net_price', 'pending')";
-        
-        if(mysqli_query($conn, $sql)) {
-            $_SESSION['success'] = "บันทึกการจองสำเร็จ! กรุณารอพนักงานตรวจสอบ";
-            header("location: my_bookings.php");
+        // ถ้าเจอว่ามีข้อมูล (มีคนจองเวลาทับกันอยู่)
+        if (mysqli_num_rows($check_query) > 0) {
+            $_SESSION['error'] = "ขออภัยครับ ห้องนี้มีการจองในช่วงเวลาดังกล่าวแล้ว กรุณาเลือกเวลาอื่น";
+            header("location: booking.php");
             exit();
-        } else {
-            $_SESSION['error'] = "เกิดข้อผิดพลาด: " . mysqli_error($conn);
+        } 
+        // ถ้าไม่ซ้ำ ก็ให้ทำงานตามปกติต่อไป
+        else {
+            // ดึงราคาห้อง
+            $room_query = mysqli_query($conn, "SELECT price_per_hour FROM rooms WHERE room_id = $room_id");
+            $room_data = mysqli_fetch_assoc($room_query);
+            $room_price = $room_data['price_per_hour'] * $total_hours;
+            
+            // คำนวณส่วนลดเบื้องต้น
+            $net_price = $room_price;
+            if($promo_id != 'NULL') {
+                $promo_query = mysqli_query($conn, "SELECT discount_percent, discount_amount FROM promotions WHERE promo_id = $promo_id");
+                $promo_data = mysqli_fetch_assoc($promo_query);
+                if($promo_data['discount_percent'] > 0) {
+                    $net_price = $room_price - ($room_price * ($promo_data['discount_percent']/100));
+                } else {
+                    $net_price = $room_price - $promo_data['discount_amount'];
+                }
+            }
+
+            // บันทึกลงฐานข้อมูล
+            $sql = "INSERT INTO bookings (customer_id, room_id, promo_id, booking_date, start_time, end_time, total_hours, room_price, net_price, booking_status) 
+                    VALUES ('$user_id', '$room_id', $promo_id, '$booking_date', '$start_time', '$end_time', '$total_hours', '$room_price', '$net_price', 'pending')";
+            
+            if(mysqli_query($conn, $sql)) {
+                $_SESSION['success'] = "บันทึกการจองสำเร็จ! กรุณารอพนักงานตรวจสอบ";
+                header("location: my_bookings.php");
+                exit();
+            } else {
+                $_SESSION['error'] = "เกิดข้อผิดพลาด: " . mysqli_error($conn);
+                header("location: booking.php");
+                exit();
+            }
         }
     }
 }
@@ -83,11 +109,11 @@ if(isset($_POST['submit_booking'])) {
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link active" href="index.php">หน้าหลักโปรไฟล์</a></li>
-                    <li class="nav-item"><a class="nav-link" href="booking.php">จองห้องพัก</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php">หน้าหลักโปรไฟล์</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="booking.php">จองห้องพัก</a></li>
                     <li class="nav-item"><a class="nav-link" href="my_bookings.php">ประวัติการจอง</a></li>
                     <li class="nav-item"><a class="nav-link" href="order_food.php">สั่งอาหาร</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="my_orders.php">ประวัติสั่งอาหาร</a></li>
+                    <li class="nav-item"><a class="nav-link" href="my_orders.php">ประวัติสั่งอาหาร</a></li>
                 </ul>
                 <div class="d-flex text-white align-items-center">
                     <span class="me-3">👤 สวัสดี, คุณ <?php echo $_SESSION['first_name']; ?></span>
@@ -105,7 +131,7 @@ if(isset($_POST['submit_booking'])) {
             <div class="card-body p-4">
 
                 <?php if(isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></div>
+                    <div class="alert alert-danger alert-dismissible fade show"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
                 <?php endif; ?>
 
                 <form action="booking.php" method="POST">
@@ -157,5 +183,6 @@ if(isset($_POST['submit_booking'])) {
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
