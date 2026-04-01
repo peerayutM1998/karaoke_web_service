@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Bangkok');
 require_once "../config/db_connect.php";
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
@@ -13,7 +14,6 @@ if (isset($_POST['add_room'])) {
     $capacity = mysqli_real_escape_string($conn, $_POST['capacity']);
     $price = mysqli_real_escape_string($conn, $_POST['price_per_hour']);
     $status = mysqli_real_escape_string($conn, $_POST['status']);
-
     $sql = "INSERT INTO rooms (room_name, capacity, price_per_hour, status) VALUES ('$room_name', '$capacity', '$price', '$status')";
     if(mysqli_query($conn, $sql)) $_SESSION['success'] = "เพิ่มห้องคาราโอเกะสำเร็จ";
     header("location: manage_rooms.php");

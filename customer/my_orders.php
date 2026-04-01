@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'customer') {
 
 $user_id = $_SESSION['user_id'];
 
-// ดึงข้อมูลบิลอาหารทั้งหมดของลูกค้าคนนี้ (เชื่อมกับตาราง bookings เพื่อให้แน่ใจว่าเป็นของลูกค้าคนนี้จริงๆ)
+// ดึงข้อมูลบิลอาหารทั้งหมดของลูกค้าคนนี้
 $query_orders = "SELECT o.*, r.room_name 
                  FROM orders o 
                  JOIN bookings b ON o.booking_id = b.booking_id 
@@ -56,6 +56,13 @@ $result_orders = mysqli_query($conn, $query_orders);
     <div class="container mt-4">
         <h3 class="mb-4">🍟 ประวัติการสั่งอาหารและเครื่องดื่ม</h3>
 
+        <?php if(isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="row g-4">
             <?php if(mysqli_num_rows($result_orders) > 0): ?>
                 <?php while($order = mysqli_fetch_assoc($result_orders)): 
@@ -72,14 +79,16 @@ $result_orders = mysqli_query($conn, $query_orders);
                         <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 pt-3">
                             <div>
                                 <h5 class="mb-0 fw-bold text-primary">บิล #ORD-<?php echo $order_id; ?></h5>
-                                <small class="text-muted">ห้อง: <?php echo $order['room_name']; ?> | เวลาสั่ง: <?php echo date('H:i (d/m/Y)', strtotime($order['created_at'])); ?></small>
+                                <small class="text-muted">ห้อง: <?php echo $order['room_name']; ?> | เวลา: <?php echo date('H:i (d/m/Y)', strtotime($order['created_at'])); ?></small>
                             </div>
                             <div>
                                 <?php 
-                                    if($order['order_status'] == 'pending') echo '<span class="badge bg-warning text-dark px-3 py-2">รอรับออเดอร์</span>';
-                                    elseif($order['order_status'] == 'preparing') echo '<span class="badge bg-info text-dark px-3 py-2">กำลังทำอาหาร</span>';
-                                    elseif($order['order_status'] == 'served') echo '<span class="badge bg-success px-3 py-2">เสิร์ฟแล้ว</span>';
-                                    else echo '<span class="badge bg-danger px-3 py-2">ยกเลิก</span>';
+                                    if($order['order_status'] == 'pending') echo '<span class="badge bg-secondary px-3 py-2">ยังไม่ชำระเงิน</span>';
+                                    elseif($order['order_status'] == 'รอชำระเงินสด') echo '<span class="badge bg-warning text-dark px-3 py-2">รอพนักงานเก็บเงิน</span>';
+                                    elseif($order['order_status'] == 'รอตรวจสอบสลิป') echo '<span class="badge bg-info text-dark px-3 py-2">รอตรวจสอบสลิป</span>';
+                                    elseif($order['order_status'] == 'จ่ายแล้ว') echo '<span class="badge bg-success px-3 py-2">กำลังทำอาหาร</span>';
+                                    elseif($order['order_status'] == 'served') echo '<span class="badge bg-primary px-3 py-2">เสิร์ฟแล้ว</span>';
+                                    else echo '<span class="badge bg-danger px-3 py-2">ยกเลิก/สถานะอื่นๆ</span>';
                                 ?>
                             </div>
                         </div>
@@ -92,10 +101,26 @@ $result_orders = mysqli_query($conn, $query_orders);
                                     </li>
                                 <?php endwhile; ?>
                             </ul>
-                            <div class="d-flex justify-content-between align-items-center border-top border-dark pt-2 mt-2">
+                            
+                            <div class="d-flex justify-content-between align-items-center border-top border-dark pt-2 mt-2 mb-3">
                                 <span class="fw-bold">ยอดรวมบิลนี้:</span>
                                 <span class="fs-5 fw-bold text-danger">฿<?php echo number_format($order['total_price'], 2); ?></span>
                             </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">
+                                    ชำระโดย: <strong class="text-dark"><?php echo !empty($order['payment_method']) ? $order['payment_method'] : 'ยังไม่ระบุ'; ?></strong>
+                                </span>
+                                
+                                <?php if($order['order_status'] == 'pending'): ?>
+                                    <a href="pay_food_order.php?order_id=<?php echo $order_id; ?>" class="btn btn-warning btn-sm fw-bold">ไปชำระเงิน</a>
+                                <?php else: ?>
+                                    <a href="print_receipt.php?order_id=<?php echo $order_id; ?>" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        🧾 ดูใบเสร็จ
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+
                         </div>
                     </div>
                 </div>
