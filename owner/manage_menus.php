@@ -14,6 +14,9 @@ if (isset($_POST['add_menu'])) {
     $category = $_POST['category'];
     $status = $_POST['status'];
     
+    // 🌟 รับค่าจำนวนคงเหลือ (ถ้าไม่ใช่เครื่องดื่ม หรือไม่ได้กรอก จะให้เป็น 0)
+    $stock_qty = (isset($_POST['stock_qty']) && $_POST['stock_qty'] != '') ? intval($_POST['stock_qty']) : 0;
+    
     // จัดการอัปโหลดรูปภาพ
     $menu_image = 'default_menu.jpg'; // ค่าเริ่มต้นถ้ารูปไม่มา
     if (isset($_FILES['menu_image']['name']) && $_FILES['menu_image']['name'] != '') {
@@ -26,8 +29,9 @@ if (isset($_POST['add_menu'])) {
         move_uploaded_file($_FILES["menu_image"]["tmp_name"], $target_file);
     }
 
-    $sql = "INSERT INTO menus (menu_name, price, category, menu_image, status) 
-            VALUES ('$menu_name', '$price', '$category', '$menu_image', '$status')";
+    // 🌟 เพิ่ม stock_qty ลงในคำสั่ง INSERT
+    $sql = "INSERT INTO menus (menu_name, price, category, menu_image, status, stock_qty) 
+            VALUES ('$menu_name', '$price', '$category', '$menu_image', '$status', '$stock_qty')";
     
     if(mysqli_query($conn, $sql)) {
         $_SESSION['success'] = "เพิ่มเมนูอาหารใหม่สำเร็จ";
@@ -62,63 +66,59 @@ $result = mysqli_query($conn, $query);
     <style> body { font-family: 'Prompt', sans-serif; background-color: #f4f6f9; } </style>
 </head>
 <body>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ownerNavbar">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="ownerNavbar">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.php">🏠 แดชบอร์ด</a>
-                </li>
-
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">⚙️ จัดการระบบ</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="manage_rooms.php">จัดการห้องคาราโอเกะ</a></li>
-                        <li><a class="dropdown-item" href="manage_promotions.php">จัดการโปรโมชั่น</a></li>
-    <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="manage_users.php">จัดการลูกค้า</a></li>
-                        <li><a class="dropdown-item" href="manage_employees.php">จัดการพนักงาน</a></li>
-                    </ul>
-                </li>
-
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">🛎️ ตรวจสอบบริการ</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="manage_bookings.php">📅 คิวการจองทั้งหมด</a></li>
-                        <li><a class="dropdown-item" href="verify_payments.php">💳 ตรวจสลิปโอนเงิน</a></li>
-                        <li><a class="dropdown-item" href="view_orders.php">🍔 รายการสั่งอาหาร</a></li>
-                    </ul>
-                </li>
-
-                <li class="nav-item dropdown">
-                    
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📊 รายงาน</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="report_income.php">💰 สรุปรายได้</a></li>
-                        <li><a class="dropdown-item" href="report_usage.php">📈 สรุปการใช้บริการ</a></li>
-                    </ul>
-                </li>
-            </ul>
-            
-            <div class="d-flex text-white align-items-center">
-                <a href="../logout.php" class="btn btn-outline-light btn-sm fw-bold">🚪 ออกจากระบบ</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm mb-4 no-print">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="index.php">👑 Owner Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ownerNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="ownerNavbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">🏠 แดชบอร์ด</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">⚙️ จัดการระบบ</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="manage_rooms.php">จัดการห้องคาราโอเกะ</a></li>
+                            <li><a class="dropdown-item" href="manage_promotions.php">จัดการโปรโมชั่น</a></li>
+                            <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="manage_users.php">จัดการลูกค้า</a></li>
+                            <li><a class="dropdown-item" href="manage_employees.php">จัดการพนักงาน</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">🛎️ ตรวจสอบบริการ</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="manage_bookings.php">📅 คิวการจองทั้งหมด</a></li>
+                            <li><a class="dropdown-item" href="verify_payments.php">💳 ตรวจสลิปโอนเงิน</a></li>
+                            <li><a class="dropdown-item" href="view_orders.php">🍔 รายการสั่งอาหาร</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📊 รายงาน</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="report_income.php">💰 สรุปรายได้</a></li>
+                            <li><a class="dropdown-item" href="report_usage.php">📈 สรุปการใช้บริการ</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="d-flex text-white align-items-center">
+                    <a href="../logout.php" class="btn btn-outline-light btn-sm fw-bold">🚪 ออกจากระบบ</a>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
+
     <div class="container mt-4">
         <h3 class="mb-4">🍽️ จัดการเมนูอาหารและเครื่องดื่ม</h3>
 
         <?php if(isset($_SESSION['success'])): ?>
-            <div class="alert alert-success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></div>
+            <div class="alert alert-success alert-dismissible fade show"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php endif; ?>
         <?php if(isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></div>
+            <div class="alert alert-danger alert-dismissible fade show"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php endif; ?>
 
         <div class="row">
@@ -137,12 +137,18 @@ $result = mysqli_query($conn, $query);
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small">หมวดหมู่</label>
-                                <select name="category" class="form-select" required>
+                                <select name="category" id="category_select" class="form-select" required>
                                     <option value="food">อาหารจานหลัก</option>
                                     <option value="snack">ของทานเล่น</option>
                                     <option value="drink">เครื่องดื่ม</option>
                                 </select>
                             </div>
+                            
+                            <div class="mb-3" id="stock_div" style="display: none;">
+                                <label class="form-label small text-primary fw-bold">จำนวนคงเหลือ (กระป๋อง/ขวด)</label>
+                                <input type="number" name="stock_qty" id="stock_qty" class="form-control border-primary" min="0" value="0">
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label small">สถานะ</label>
                                 <select name="status" class="form-select" required>
@@ -170,6 +176,7 @@ $result = mysqli_query($conn, $query);
                                     <th>ชื่อเมนู</th>
                                     <th>หมวดหมู่</th>
                                     <th>ราคา</th>
+                                    <th class="text-center">คงเหลือ</th>
                                     <th>สถานะ</th>
                                     <th class="text-center">จัดการ</th>
                                 </tr>
@@ -189,6 +196,15 @@ $result = mysqli_query($conn, $query);
                                         ?>
                                     </td>
                                     <td class="text-danger fw-bold">฿<?php echo number_format($row['price'], 2); ?></td>
+                                    
+                                    <td class="text-center">
+                                        <?php if($row['category'] == 'drink'): ?>
+                                            <span class="badge bg-info text-dark px-2 py-1 fs-6"><?php echo $row['stock_qty']; ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+
                                     <td>
                                         <?php if($row['status'] == 'available'): ?>
                                             <span class="badge bg-success">พร้อมขาย</span>
@@ -209,5 +225,21 @@ $result = mysqli_query($conn, $query);
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.getElementById('category_select').addEventListener('change', function() {
+            var stockDiv = document.getElementById('stock_div');
+            var stockInput = document.getElementById('stock_qty');
+            
+            if(this.value === 'drink') {
+                stockDiv.style.display = 'block';
+            } else {
+                stockDiv.style.display = 'none';
+                stockInput.value = '0'; // รีเซ็ตเป็น 0 ถ้าไม่ใช่น้ำ
+            }
+        });
+    </script>
 </body>
 </html>

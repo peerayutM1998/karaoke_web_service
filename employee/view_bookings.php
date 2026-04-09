@@ -7,6 +7,22 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'employee') {
     exit();
 }
 
+// 🌟 ระบบประมวลผลเมื่อพนักงานกดยกเลิกคิว (ลูกค้าไม่มา)
+if (isset($_GET['action']) && isset($_GET['id']) && $_GET['action'] == 'cancel_noshow') {
+    $cancel_id = intval($_GET['id']);
+    
+    // เปลี่ยนสถานะการจองเป็น cancelled ระบบ Overlap Check จะถือว่าเวลานี้ว่างทันที
+    $sql_cancel = "UPDATE bookings SET booking_status = 'cancelled' WHERE booking_id = $cancel_id";
+    
+    if (mysqli_query($conn, $sql_cancel)) {
+        $_SESSION['success'] = "ยกเลิกคิวจอง #$cancel_id (ลูกค้าไม่มา) เรียบร้อยแล้ว! เวลานี้ถูกปลดล็อคให้คนอื่นจองได้แล้วครับ";
+    } else {
+        $_SESSION['error'] = "เกิดข้อผิดพลาดในการยกเลิกคิว: " . mysqli_error($conn);
+    }
+    header("location: view_bookings.php");
+    exit();
+}
+
 $today = date('Y-m-d');
 
 // ดึงคิวจองเฉพาะของ "วันนี้" ที่สถานะเป็น confirmed (อนุมัติแล้ว)
@@ -38,9 +54,9 @@ $result = mysqli_query($conn, $query);
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link text-dark" href="index.php">สถานะห้อง (Dashboard)</a></li>
-                    <li class="nav-item"><a class="nav-link text-dark" href="view_bookings.php">คิวจองวันนี้</a></li>
+                    <li class="nav-item"><a class="nav-link active text-dark fw-bold" href="view_bookings.php">คิวจองวันนี้</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="room_status.php">เช็คอิน/เช็คเอาท์</a></li>
-                    <li class="nav-item"><a class="nav-link active text-dark fw-bold" href="manage_orders.php">ออเดอร์อาหาร</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" href="manage_orders.php">ออเดอร์อาหาร</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="check_payments.php">เช็คบิล</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="manage_customers.php">ลูกค้า Walk-in</a></li>
                     <li class="nav-item"><a class="nav-link text-dark" href="verify_payments.php">ตรวจสลิปโอนเงิน</a></li>
@@ -54,8 +70,15 @@ $result = mysqli_query($conn, $query);
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5">
         <h3 class="mb-4">📋 คิวจองห้องคาราโอเกะ (ประจำวันที่ <?php echo date('d/m/Y'); ?>)</h3>
+
+        <?php if(isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php endif; ?>
+        <?php if(isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php endif; ?>
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-0 table-responsive">
@@ -67,7 +90,7 @@ $result = mysqli_query($conn, $query);
                             <th>ชื่อลูกค้า</th>
                             <th>เบอร์โทร</th>
                             <th>ระยะเวลา (ชม.)</th>
-                            <th class="text-center">สถานะการเตรียมห้อง</th>
+                            <th class="text-center">จัดการคิว</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -79,10 +102,21 @@ $result = mysqli_query($conn, $query);
                                 </td>
                                 <td class="fw-bold text-primary fs-5"><?php echo $row['room_name']; ?></td>
                                 <td><?php echo $row['first_name']; ?></td>
-                                <td><?php echo $row['phone']; ?></td>
+                                <td>
+                                    <a href="tel:<?php echo $row['phone']; ?>" class="text-decoration-none text-dark">
+                                        📞 <?php echo $row['phone']; ?>
+                                    </a>
+                                </td>
                                 <td><?php echo $row['total_hours']; ?> ชม.</td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-success">เตรียมห้องพร้อมแล้ว</button>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-success">✅ เตรียมห้องแล้ว</button>
+                                        <a href="view_bookings.php?action=cancel_noshow&id=<?php echo $row['booking_id']; ?>" 
+                                           class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('ลูกค้ารายนี้ไม่มาตามนัดใช่หรือไม่?\n\nหากกดยืนยัน คิวนี้จะถูกยกเลิก และเวลาจองนี้จะเปิดว่างให้ลูกค้ารายอื่นกดจองได้ทันที');">
+                                           ❌ ยกเลิก (ลูกค้าไม่มา)
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endwhile; ?>
@@ -94,5 +128,7 @@ $result = mysqli_query($conn, $query);
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

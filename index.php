@@ -2,15 +2,15 @@
 session_start();
 require_once "config/db_connect.php";
 
-// ค้นหาข้อมูลห้องคาราโอเกะ (ถ้ามีการกดค้นหา จะสามารถนำไปต่อยอดเช็คตาราง bookings ได้ในอนาคต)
+// ค้นหาข้อมูลห้องคาราโอเกะ
 $search_query = "";
 if (isset($_GET['search'])) {
-    // โค้ดส่วนนี้เตรียมไว้สำหรับการค้นหาขั้นสูง เช่น เช็ควันที่และเวลาจากตารางการจอง
-    // เบื้องต้นเราจะดึงห้องที่สถานะ 'available' มาแสดงก่อน
-    $query = "SELECT * FROM rooms WHERE status = 'available'";
+    // โค้ดส่วนนี้เตรียมไว้สำหรับการค้นหาขั้นสูง
+    // 🌟 แก้ไข: ดึงห้อง "ทั้งหมด" มาแสดง ไม่ใช่แค่ห้องที่ว่าง
+    $query = "SELECT * FROM rooms";
 } else {
-    // ดึงข้อมูลห้องทั้งหมดมาแสดงหน้าแรก
-    $query = "SELECT * FROM rooms WHERE status = 'available'";
+    // 🌟 แก้ไข: ดึงข้อมูลห้อง "ทั้งหมด" มาแสดงหน้าแรก
+    $query = "SELECT * FROM rooms";
 }
 $result = mysqli_query($conn, $query);
 ?>
@@ -31,8 +31,20 @@ $result = mysqli_query($conn, $query);
             padding: 100px 0;
             text-align: center;
         }
-        .room-card { transition: transform 0.3s; }
+        .room-card { transition: transform 0.3s; position: relative; }
         .room-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        
+        /* สไตล์สำหรับป้ายสถานะมุมขวาบนของรูป */
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -93,7 +105,17 @@ $result = mysqli_query($conn, $query);
                 <?php while($row = mysqli_fetch_assoc($result)): ?>
                 <div class="col-md-4">
                     <div class="card h-100 room-card border-0 shadow-sm">
-                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="card-img-top" alt="Room Image" style="height: 200px; object-fit: cover;">
+                        
+                        <?php if($row['status'] == 'available'): ?>
+                            <span class="status-badge bg-success text-white">✅ ว่างพร้อมให้บริการ</span>
+                        <?php else: ?>
+                            <span class="status-badge bg-danger text-white">❌ ไม่ว่าง</span>
+                        <?php endif; ?>
+
+                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                             class="card-img-top" alt="Room Image" 
+                             style="height: 200px; object-fit: cover; <?php echo ($row['status'] != 'available') ? 'filter: grayscale(80%); opacity: 0.8;' : ''; ?>">
+                        
                         <div class="card-body">
                             <h5 class="card-title fw-bold"><?php echo $row['room_name']; ?></h5>
                             <p class="card-text text-muted mb-1">
@@ -102,18 +124,24 @@ $result = mysqli_query($conn, $query);
                             </p>
                         </div>
                         <div class="card-footer bg-white border-top-0 pb-3 text-center">
-                            <?php if(isset($_SESSION['user_id']) && $_SESSION['role'] == 'customer'): ?>
-                                <a href="customer/booking.php?room_id=<?php echo $row['room_id']; ?>" class="btn btn-outline-primary w-100">จองห้องนี้</a>
+                            
+                            <?php if($row['status'] == 'available'): ?>
+                                <?php if(isset($_SESSION['user_id']) && $_SESSION['role'] == 'customer'): ?>
+                                    <a href="customer/booking.php?room_id=<?php echo $row['room_id']; ?>" class="btn btn-outline-primary w-100">จองห้องนี้</a>
+                                <?php else: ?>
+                                    <a href="login.php" class="btn btn-outline-secondary w-100">เข้าสู่ระบบเพื่อจอง</a>
+                                <?php endif; ?>
                             <?php else: ?>
-                                <a href="login.php" class="btn btn-outline-secondary w-100">เข้าสู่ระบบเพื่อจอง</a>
+                                <button class="btn btn-secondary w-100 disabled" disabled>ขณะนี้ห้องไม่ว่าง</button>
                             <?php endif; ?>
+
                         </div>
                     </div>
                 </div>
                 <?php endwhile; ?>
             <?php else: ?>
                 <div class="col-12 text-center">
-                    <p class="text-danger fs-5">ขออภัย ไม่พบห้องว่างในขณะนี้</p>
+                    <p class="text-danger fs-5">ขออภัย ไม่พบข้อมูลห้องในระบบ</p>
                 </div>
             <?php endif; ?>
 

@@ -10,11 +10,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'owner') {
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
-$query = "SELECT DATE(payment_date) as pay_date, COUNT(payment_id) as total_bills, SUM(amount_paid) as daily_income 
-          FROM payments 
-          WHERE payment_status = 'verified' AND DATE(payment_date) BETWEEN '$start_date' AND '$end_date'
-          GROUP BY DATE(payment_date) 
-          ORDER BY DATE(payment_date) ASC";
+// 🌟 แก้ไขคำสั่ง SQL: ให้ไปเชื่อมกับตาราง bookings และ rooms เพื่อดึง room_name มาแสดง
+// และทำการ GROUP BY แยกตาม "วันที่" และ "ชื่อห้อง"
+$query = "SELECT DATE(p.payment_date) as pay_date, r.room_name, COUNT(p.payment_id) as total_bills, SUM(p.amount_paid) as daily_income 
+          FROM payments p 
+          JOIN bookings b ON p.booking_id = b.booking_id
+          JOIN rooms r ON b.room_id = r.room_id
+          WHERE p.payment_status = 'verified' AND DATE(p.payment_date) BETWEEN '$start_date' AND '$end_date'
+          GROUP BY DATE(p.payment_date), r.room_name 
+          ORDER BY DATE(p.payment_date) ASC, r.room_name ASC";
 $result = mysqli_query($conn, $query);
 $total_period_income = 0;
 ?>
@@ -53,7 +57,7 @@ $total_period_income = 0;
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="manage_rooms.php">จัดการห้องคาราโอเกะ</a></li>
                         <li><a class="dropdown-item" href="manage_promotions.php">จัดการโปรโมชั่น</a></li>
-    <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
+                        <li><a class="dropdown-item" href="manage_menus.php">จัดการเมนูอาหาร</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="manage_users.php">จัดการลูกค้า</a></li>
                         <li><a class="dropdown-item" href="manage_employees.php">จัดการพนักงาน</a></li>
@@ -113,15 +117,16 @@ $total_period_income = 0;
             <button onclick="exportTableToCSV('income_report.csv')" class="btn btn-success">📊 ส่งออก Excel (CSV)</button>
         </div>
 
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 mb-5">
             <div class="card-body">
-                <h5 class="text-center fw-bold mb-3">สรุปรายได้ร้านคาราโอเกะ</h5>
+                <h5 class="text-center fw-bold mb-3">สรุปรายได้ร้านคาราโอเกะ (จำแนกตามห้อง)</h5>
                 <p class="text-center text-muted">ระหว่างวันที่ <?php echo date('d/m/Y', strtotime($start_date)); ?> ถึง <?php echo date('d/m/Y', strtotime($end_date)); ?></p>
                 
-                <table class="table table-bordered mb-0" id="reportTable">
+                <table class="table table-bordered table-hover mb-0" id="reportTable">
                     <thead class="table-light">
                         <tr>
                             <th class="p-3 text-center">วันที่</th>
+                            <th class="text-center">ชื่อห้องคาราโอเกะ</th>
                             <th class="text-center">จำนวนบิลที่ชำระสำเร็จ</th>
                             <th class="text-end pe-3">รายได้รวม (บาท)</th>
                         </tr>
@@ -133,18 +138,19 @@ $total_period_income = 0;
                             ?>
                             <tr>
                                 <td class="text-center p-3"><?php echo date('d/m/Y', strtotime($row['pay_date'])); ?></td>
+                                <td class="text-center fw-bold text-primary"><?php echo $row['room_name']; ?></td>
                                 <td class="text-center"><?php echo $row['total_bills']; ?> รายการ</td>
                                 <td class="text-end pe-3 fw-bold text-success"><?php echo number_format($row['daily_income'], 2); ?></td>
                             </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="3" class="text-center p-4">ไม่มีข้อมูลรายได้ในช่วงเวลานี้</td></tr>
+                            <tr><td colspan="4" class="text-center p-4">ไม่มีข้อมูลรายได้ในช่วงเวลานี้</td></tr>
                         <?php endif; ?>
                     </tbody>
                     <tfoot class="table-dark">
                         <tr>
-                            <th colspan="2" class="text-end p-3">รวมรายได้สุทธิทั้งหมด:</th>
-                            <th class="text-end pe-3 fs-5">฿<?php echo number_format($total_period_income, 2); ?></th>
+                            <th colspan="3" class="text-end p-3">รวมรายได้สุทธิทั้งหมด:</th>
+                            <th class="text-end pe-3 fs-5 text-warning">฿<?php echo number_format($total_period_income, 2); ?></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -170,5 +176,6 @@ $total_period_income = 0;
             downloadLink.click();
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
