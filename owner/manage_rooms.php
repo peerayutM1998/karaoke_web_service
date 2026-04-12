@@ -33,7 +33,8 @@ if (isset($_GET['delete_id'])) {
 $query = "SELECT r.*, 
           (SELECT COUNT(*) FROM bookings b 
            WHERE b.room_id = r.room_id 
-           AND NOW() BETWEEN b.start_time AND b.end_time) as current_booking_count
+           AND NOW() BETWEEN b.start_time AND b.end_time
+           AND b.booking_status NOT IN ('cancelled', 'rejected')) as current_booking_count
           FROM rooms r";
 $result = mysqli_query($conn, $query);
 ?>
